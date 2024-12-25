@@ -1,0 +1,112 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# Initialize screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Temple Run Simplified")
+
+# Clock and font
+clock = pygame.time.Clock()
+font = pygame.font.SysFont("Arial", 24)
+
+# Player settings
+player_size = 50
+player_x = WIDTH // 2 - player_size // 2
+player_y = HEIGHT - 2 * player_size
+player_speed = 10
+
+# Obstacle settings
+obstacle_width = 50
+obstacle_height = 50
+obstacle_speed = 7
+obstacles = []
+
+# Score
+score = 0
+
+# Add obstacles
+def add_obstacle():
+    x_pos = random.randint(0, WIDTH - obstacle_width)
+    obstacles.append([x_pos, 0])
+
+# Move obstacles
+def move_obstacles():
+    global score
+    for obstacle in obstacles[:]:
+        obstacle[1] += obstacle_speed
+        if obstacle[1] > HEIGHT:
+            obstacles.remove(obstacle)
+            score += 1
+
+# Check collisions
+def check_collision(player_rect):
+    for obstacle in obstacles:
+        obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], obstacle_width, obstacle_height)
+        if player_rect.colliderect(obstacle_rect):
+            return True
+    return False
+
+# Main game loop
+def main():
+    global player_x
+    running = True
+    add_obstacle_timer = 0
+
+    while running:
+        screen.fill(WHITE)
+
+        # Event handling
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Player movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and player_x > 0:
+            player_x -= player_speed
+        if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+            player_x += player_speed
+
+        # Draw player
+        player_rect = pygame.Rect(player_x, player_y, player_size, player_size)
+        pygame.draw.rect(screen, BLUE, player_rect)
+
+        # Add and move obstacles
+        add_obstacle_timer += 1
+        if add_obstacle_timer > 30:
+            add_obstacle()
+            add_obstacle_timer = 0
+        move_obstacles()
+
+        # Draw obstacles
+        for obstacle in obstacles:
+            pygame.draw.rect(screen, RED, (obstacle[0], obstacle[1], obstacle_width, obstacle_height))
+
+        # Check for collisions
+        if check_collision(player_rect):
+            running = False
+
+        # Display score
+        score_text = font.render(f"Score: {score}", True, BLACK)
+        screen.blit(score_text, (10, 10))
+
+        pygame.display.flip()
+        clock.tick(30)
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
